@@ -19,7 +19,7 @@ export default async function handle(req, res) {
     }
   }
   
-  await sshCommands(
+  sshCommands(
     ipAddress, 
     commands, 
     directory

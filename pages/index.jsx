@@ -8,6 +8,7 @@ import {
 import {
   TWFullScreen,
   TWCenteredContent,
+  FrontEndContractCompileAndSync,
   ReactMarkdownTest,
   TWButtonWithSpinner,
   TWCircleSpinner,
@@ -148,29 +149,7 @@ const Ec2DashboardTest = () => {
     <TWFullScreen>
       <TWCenteredContent>
         <div className='pb-12'>
-          <h2 className='text-lg font-bold mb-3'>
-            Repositories
-          </h2>
-          <div className='mb-3'>
-            <input 
-              type='text'
-              placeholder="Front End"
-              className='w-1/2 border rounded p-1 mr-6'
-              onChange={(event) => {
-                
-              }}
-            />
-          </div>
-          <div className='mb-3'>
-            <input 
-              type='text'
-              placeholder="Contract"
-              className='w-1/2 border rounded p-1 mr-6'
-              onChange={(event) => {
-                
-              }}
-            />
-          </div>
+          <FrontEndContractCompileAndSync />
         </div>
         <div className='flex'>
           {instances && 
