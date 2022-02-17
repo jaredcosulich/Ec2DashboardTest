@@ -144,12 +144,13 @@ const Ec2DashboardTest = () => {
     checkInstances();
   }, [])
 
-
   return (
     <TWFullScreen>
       <TWCenteredContent>
         <div className='pb-12'>
-          <FrontEndContractCompileAndSync />
+          <FrontEndContractCompileAndSync 
+            sendCommands={sendCommands}
+          />
         </div>
         <div className='flex'>
           {instances && 

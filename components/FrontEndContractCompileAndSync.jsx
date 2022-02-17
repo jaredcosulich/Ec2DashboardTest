@@ -1,8 +1,21 @@
+import {
+  TWButtonWithSpinner
+} from '.'
+
 import { useState } from 'react';
 
-const FrontEndContractCompileAndSync = () => {
+const FrontEndContractCompileAndSync = ({ sendCommands }) => {
   const [frontEndRepo, setFrontEndRepo] = useState()
   const [contractRepo, setContractRepo] = useState()
+
+  const compileContract = (_event, reset) => {
+    const contractRepoName = contractRepo.replace('https://github.com/', '')
+    const directory = contractRepoName.split('/')[1]
+    sendCommands([`nodClone ${contractRepoName}`])
+    sendCommands(['npm install', 'npx hardhat compile'], directory)
+
+    reset()
+  }
 
   return (
     <div>
@@ -29,6 +42,11 @@ const FrontEndContractCompileAndSync = () => {
           }}
         />
       </div>
+      <TWButtonWithSpinner
+        onClick={compileContract}
+      >
+        Compile Contract
+      </TWButtonWithSpinner>
     </div>
   )
 }
