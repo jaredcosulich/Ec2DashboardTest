@@ -175,6 +175,7 @@ const Ec2DashboardTest = () => {
                     href={stream}
                     className={`pt-6 ${streamConnected ? 'text-green-600' : 'text-red-600'} underline`}
                     target='_blank'
+                    rel="noreferrer"
                   >
                     Stream
                   </a>
