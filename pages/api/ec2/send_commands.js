@@ -17,10 +17,12 @@ export default async function handle(req, res) {
     }
   }
 
+  console.log("COMMANDS", commands)
   const response = await sshCommands(
     ipAddress, 
     commands, 
     directory
   );
-  res.json(response);
+  console.log("RESPONSE", response)
+  res.json(response || {});
 }
