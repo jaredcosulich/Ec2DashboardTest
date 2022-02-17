@@ -23,6 +23,8 @@ const Ec2DashboardTest = () => {
   const [eventSource, setEventSource] = useState(null)
   const instancesRef = useRef(instances || [])
   const [command, setCommand] = useState(null)
+  const [stream, setStream] = useState(null)
+  const [streamConnected, setStreamConnected] = useState(false)
   
   const instanceIds = () => instances.map(
     (instance) => instance.id
@@ -36,7 +38,6 @@ const Ec2DashboardTest = () => {
   const terminateAll = async (_event, reset) => {
     await terminateEc2Instances(instanceIds())
     clearLog()
-
     waitFor(0, reset)
   }
 
@@ -128,15 +129,20 @@ const Ec2DashboardTest = () => {
 
     if (eventSource) {
       eventSource.close()
+      setStream(null)
     }
 
     if (instanceIp && instanceIp !== "?") {
+      setStream(streamURL)
       const es = new EventSource(streamURL);
       es.addEventListener('log', (ev) => {
         logMessage(ev.data)
       })
       es.onerror = (ev) => {
         logMessage(ev.data)
+      }
+      es.onopen = (ev) => {
+        setStreamConnected(true)
       }
       setEventSource(es)
     }
@@ -164,6 +170,15 @@ const Ec2DashboardTest = () => {
                   ${JSON.stringify(instances, null, 2)}
                   ```
                 </ReactMarkdownTest>
+                {stream &&
+                  <a 
+                    href={stream}
+                    className={`pt-6 ${streamConnected ? 'text-green-600' : 'text-red-600'} underline`}
+                    target='_blank'
+                  >
+                    Stream
+                  </a>
+                }
               </div>
               <div className='pt-12'>
                 <TWButtonWithSpinner
