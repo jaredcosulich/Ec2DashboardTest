@@ -35,6 +35,8 @@ const Ec2DashboardTest = () => {
 
   const terminateAll = async (_event, reset) => {
     await terminateEc2Instances(instanceIds())
+    clearLog()
+
     waitFor(0, reset)
   }
 
