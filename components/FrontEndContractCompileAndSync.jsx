@@ -11,8 +11,8 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
   const compileContract = (_event, reset) => {
     const contractRepoName = contractRepo.replace('https://github.com/', '')
     const directory = contractRepoName.split('/')[1]
-    sendCommands([`nodClone ${contractRepoName}`])
-    sendCommands(['npm install', 'npx hardhat compile'], directory)
+    // sendCommands([`nodClone ${contractRepoName}`])
+    sendCommands(['npm install --loglevel verbose', 'npx hardhat compile'], directory)
 
     reset()
   }
