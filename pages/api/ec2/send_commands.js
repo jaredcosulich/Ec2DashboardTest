@@ -5,6 +5,7 @@ import {
 } from '../../../lib/api'
 
 export default async function handle(req, res) {
+  console.log("HI1", req.body)
   const { ipAddress, commands, directory } = req.body;
   
   for (let i=0; i<commands.length; ++i) {
@@ -16,6 +17,8 @@ export default async function handle(req, res) {
       )
     }
   }
+  
+  console.log("HI2")
 
   console.log("COMMANDS", commands)
   const response = await sshCommands(
