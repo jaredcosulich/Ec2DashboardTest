@@ -117,7 +117,7 @@ const Ec2DashboardTest = () => {
 
   useEffect(() => {
     const instanceIp = instances?.[0]?.publicIpAddress
-    const streamURL = `http://${instanceIp}:3005/stream`
+    const streamURL = `https://${instanceIp}:8443/stream`
 
     if (eventSource && eventSource.url === streamURL) {
       return;
