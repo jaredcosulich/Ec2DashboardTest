@@ -1,6 +1,5 @@
 import {
-  TWButton,
-  TWButtonWithSpinner
+  Ec2CommandStage
 } from '.'
 
 import { useState } from 'react';
@@ -76,7 +75,6 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
   //   sendCommands(['nodeClone NodLabsXYZ/ec2utils'])
   // }, [sendCommands])
 
-  console.log("STAGES", stages)
   return (
     <div>
       <h2 className='text-lg font-bold mb-3'>
@@ -103,25 +101,11 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
         />
       </div>
 
-      {stages.map((stage, index) => {
-        return (
-          <div 
-            key={`stage-${index}`} 
-            className='border rounded p-3 mb-3 w-48'
-          >
-            <h3 className='text-lg mb-1'>
-              {stage.name}
-            </h3>
-            <div className='text-sm mb-3'>
-              {stage.blurb}
-            </div>
-            <TWButton
-            >
-              Start
-            </TWButton>
-          </div>
-        )
-      })}
+      {stages.map((stage, index) => (
+        <div key={`stage-${index}`}>
+          <Ec2CommandStage stage={stage} sendCommands={sendCommands} />
+        </div>
+      ))}
     </div>
   )
 }
@@ -131,6 +115,7 @@ const stages = [
     name: 'Prep',
     blurb: 'Prepare the environment',
     details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
+    type: 'automatic',
     commands: [
       {
         commands: [
@@ -146,6 +131,7 @@ const stages = [
     name: 'Prep',
     blurb: 'Prepare the environment',
     details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
+    type: 'button',
     commands: [
       {
         commands: [
@@ -161,6 +147,7 @@ const stages = [
     name: 'Prep',
     blurb: 'Prepare the environment',
     details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
+    type: 'button',
     commands: [
       {
         commands: [

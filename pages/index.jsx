@@ -9,10 +9,10 @@ import {
   TWFullScreen,
   TWCenteredContent,
   FrontEndContractCompileAndSync,
-  ReactMarkdownTest,
   TWButtonWithSpinner,
   TWCircleSpinner,
-  ConsoleLogger
+  ConsoleLogger,
+  ReactMarkdownTest
 } from '../components'
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -170,10 +170,13 @@ const Ec2DashboardTest = () => {
       <TWCenteredContent>
         <div className='p-12 w-screen flex'>
           <div className='w-7/12'>
-            <FrontEndContractCompileAndSync 
-              sendCommands={sendCommands}
-            />
-          </div>
+            {(instances || []).length > 0 ? 
+              <FrontEndContractCompileAndSync 
+                sendCommands={sendCommands}
+              /> :
+              <TWCircleSpinner message="Connecting to EC2" />
+            }
+            </div>
           <div className='w-5/12'>
             <div className='pt-12'>
               <span
