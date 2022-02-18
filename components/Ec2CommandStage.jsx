@@ -5,14 +5,13 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 
 const Ec2CommandStage = ({ stage, sendCommands, data }) => {
+  const [subStageIndex, setSubStageIndex] = useState(0)
   const [running, setRunning] = useState(false)
   const [complete, setComplete] = useState(false)
-  const [subStageIndex, setSubStageIndex] = useState(0)
-  const [subStageRunning, setSubStageRunning] = useState(false)
-  const [subStageComplete, setSubStageComplete] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   const handleMessage = useMemo(() => (message, logger) => {
-    console.log("HI", message)
+    console.log("Message:", message)
     if (stage.messageHandler) {
       stage.messageHandler(
         message, 
@@ -20,6 +19,7 @@ const Ec2CommandStage = ({ stage, sendCommands, data }) => {
         () => {
           setRunning(false)
           setComplete(true)
+          setSubStageIndex(subStageIndex + 1)
         }
       )
     } else {
@@ -27,7 +27,7 @@ const Ec2CommandStage = ({ stage, sendCommands, data }) => {
       setRunning(false)
       setComplete(true)
     }        
-  }, [stage])
+  }, [stage, subStageIndex])
 
   const sendCommandsProxy = useMemo(() => (commands, directory) => {
     sendCommands(
@@ -37,14 +37,28 @@ const Ec2CommandStage = ({ stage, sendCommands, data }) => {
     )
   }, [sendCommands, handleMessage])
 
-  const run = useMemo(() => () => {
+  const handleError = useMemo(() => (errorMessage) => {
+    setErrorMessage(errorMessage)
+    setRunning(false)
+    setComplete(false)
+  }, [])
+
+  const run = useMemo(() => (_stage) => {
+    setErrorMessage(null)
     setRunning(true)
-    stage.start(sendCommandsProxy, data)
-  }, [stage, sendCommandsProxy, data])
+    setComplete(false)
+
+    if (_stage.start) {
+      _stage.start(sendCommandsProxy, data, handleError)
+    } else if (_stage.subStages) {
+      run(_stage.subStages[subStageIndex])
+      setSubStageIndex(subStageIndex + 1)
+    }
+  }, [sendCommandsProxy, data, handleError, subStageIndex])
 
   useEffect(() => {
     if (stage.type === 'automatic') {
-      run();
+      run(stage);
     }  
   }, [stage, run])
 
@@ -70,7 +84,7 @@ const Ec2CommandStage = ({ stage, sendCommands, data }) => {
           }
           {!running && !complete && stage.type === 'button' &&
             <TWButton
-              onClick={run}
+              onClick={() => run(info)}
             >
               Start
             </TWButton>
@@ -81,15 +95,30 @@ const Ec2CommandStage = ({ stage, sendCommands, data }) => {
   }
 
   return (
-    <div className='flex'>
-      {item(stage, running, complete)}
-      {stage.subStages && stage.subStages.slice(0, subStageIndex).map((subStage, index) => {
-        return (
-          <div key={`substage-${index}`} className='ml-3'>
-            {item(subStage, true, subStageComplete)}
-          </div>
-        )
-      })}
+    <div>
+      {errorMessage && 
+        <div className='text-red-600 py-3 text-center'>
+          {errorMessage}
+        </div>
+      }
+      <div className='flex'>
+        {item(
+          stage, 
+          subStageIndex === 0 ? running : false, 
+          subStageIndex === 0 ? complete : true
+        )}
+        {stage.subStages && stage.subStages.slice(0, subStageIndex).map((subStage, index) => {
+          return (
+            <div key={`substage-${index}`} className='ml-3'>
+              {item(
+                subStage,
+                subStageIndex === index + 1 ? running : false, 
+                subStageIndex === index + 1 ? complete : true
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

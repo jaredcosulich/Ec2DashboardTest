@@ -123,7 +123,7 @@ const stages = [
     blurb: 'Prepare the environment',
     details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
     type: 'button',
-    start: (sendCommands, data) => {
+    start: (sendCommands, _data, _onError) => {
       sendCommands(['pwd'])
     },
     messageHandler: (message, logger, complete) => {
@@ -139,9 +139,14 @@ const stages = [
     subStages: [{
       name: 'Clone',
       blurb: 'Clone the contract repository',
-      start: (sendCommands, data) => {
+      start: (sendCommands, data, onError) => {
+        if (!data.contractRepo) {
+          onError("Please provide a GitHub repository URL for the contract above.")
+          return;
+        }
+        const repoName = data.contractRepo.replace('https://github.com/', '')
         sendCommands(
-          [`nodClone ${data.contractRepo}`]
+          [`nodClone ${repoName}`]
         )
       },
       messageHandler: (message, logger, complete) => {
@@ -156,7 +161,7 @@ const stages = [
     }, {
       name: 'Install',
       blurb: 'Install contract dependencies',
-      start: (sendCommands, data) => {
+      start: (sendCommands, data, onError) => {
         const repoParts = data.contractRepo.split('/');
         const repoName = repoParts[repoParts.length - 1];
         sendCommands(
@@ -175,11 +180,11 @@ const stages = [
     }]    
   },
   {
-    name: 'Prep',
-    blurb: 'Prepare the environment',
-    details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
+    name: 'Deploy',
+    blurb: 'Deploy the contract to a blockchain',
+    details: '',
     type: 'button',
-    start: (sendCommands, data) => {
+    start: (sendCommands, data, onError) => {
       sendCommands(['pwd'])
     },
     messageHandler: (message, logger, complete) => {
