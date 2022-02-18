@@ -174,7 +174,9 @@ const Ec2DashboardTest = () => {
               <FrontEndContractCompileAndSync 
                 sendCommands={sendCommands}
               /> :
-              <TWCircleSpinner message="Connecting to EC2" />
+              <TWCircleSpinner 
+                message={`Connecting to EC2: ${(instances || []).length} instance${(instances || []).length === 1 ? '' : 's'}`} 
+              />
             }
             </div>
           <div className='w-5/12'>
@@ -256,13 +258,20 @@ const Ec2DashboardTest = () => {
                 }
                 <ConsoleLogger text={log.join('\n')} />
                 <div className='text-xs'>
-                  <ReactMarkdownTest>
-                    ```js
-                    ${Object.entries(instances[0]).map(
-                      ([key, value]) => `${key}: ${value}`
-                    ).join('\n')}
-                    ```
-                  </ReactMarkdownTest>
+                  {(instances || []).length === 0 && 
+                    <div className='mt-6'>
+                      No Instances Running
+                    </div>
+                  }
+                  {(instances || []).length > 0 &&
+                    <ReactMarkdownTest>
+                      ```js
+                      ${Object.entries(instances[0]).map(
+                        ([key, value]) => `${key}: ${value}`
+                      ).join('\n')}
+                      ```
+                    </ReactMarkdownTest>
+                  }
                 </div>                    
               </div>
             }
