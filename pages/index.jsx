@@ -25,6 +25,7 @@ const Ec2DashboardTest = () => {
   const [command, setCommand] = useState(null)
   const [stream, setStream] = useState(null)
   const [streamConnected, setStreamConnected] = useState(false)
+  const onMessage = useRef(null)
   
   const instanceIds = () => instances.map(
     (instance) => instance.id
@@ -96,8 +97,11 @@ const Ec2DashboardTest = () => {
     reset();
   }
 
-  const sendCommands = async (commands, directory) => {
+  const sendCommands = async (commands, directory, _onMessage) => {
     logMessage(`Running "${commands.join(' && ')}" in "${directory || '.'}"`)
+
+    onMessage.current = _onMessage
+
     await sendEc2Commands(
       instances[0].publicDnsName, 
       commands, 
@@ -107,7 +111,9 @@ const Ec2DashboardTest = () => {
 
   const clearLog = (_event, reset) => {
     setLog([])
-    reset()
+    if (reset) {
+      reset()
+    }
   }
 
   const checkInstances = async (_event, reset) => {
@@ -136,7 +142,11 @@ const Ec2DashboardTest = () => {
       setStream(streamURL)
       const es = new EventSource(streamURL);
       es.addEventListener('log', (ev) => {
-        logMessage(ev.data)
+        if (onMessage.current) {
+          onMessage.current(logMessage, ev.data)
+        } else {
+          logMessage(ev.data)
+        }
       })
       es.onerror = (ev) => {
         logMessage(ev.data)
@@ -175,7 +185,7 @@ const Ec2DashboardTest = () => {
                     href={stream}
                     className={`pt-6 ${streamConnected ? 'text-green-600' : 'text-red-600'} underline`}
                     target='_blank'
-                    rel="noreferrer"
+                    rel='noopener noreferrer'
                   >
                     Stream
                   </a>

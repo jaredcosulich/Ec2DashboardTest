@@ -14,7 +14,7 @@ export default async function handle(req, res) {
     if (command.startsWith('nodClone ')) {
       commands[i] = command.replace(
         'nodClone ',
-        `git clone https://NodLabsXYZ:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/`
+        `git clone --progress --verbose https://NodLabsXYZ:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/`
       )
     }
   }

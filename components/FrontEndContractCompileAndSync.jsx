@@ -11,8 +11,28 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
   const compileContract = (_event, reset) => {
     const contractRepoName = contractRepo.replace('https://github.com/', '')
     const directory = contractRepoName.split('/')[1]
-    // sendCommands([`nodClone ${contractRepoName}`])
-    sendCommands(['npm install --loglevel verbose', 'npx hardhat compile'], directory)
+    sendCommands(
+      [`nodClone ${contractRepoName}`], 
+      null, 
+      (logger, message) => {
+        if (!logger) return;
+        logger(message)
+        if (
+          message.startsWith("Resolving deltas: 100%") ||
+          message.indexOf("is not an empty directory") > -1
+        ) {
+          sendCommands(
+            ['npm install --verbose', 'npx hardhat compile'], 
+            directory,
+            (logger2, message2) => {
+              if (message2.indexOf('info') > -1) {
+                logger2(message2)
+              }
+            }
+          )
+        }
+      }
+    )
 
     reset()
   }
