@@ -18,6 +18,7 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
           logger(message)
           if (
             message.startsWith("Resolving deltas: 100%") ||
+            message.indexOf("Receiving objects: 100%") > -1 ||
             message.indexOf("is not an empty directory") > -1
           ) {
             await installAndCompileContract(directory)
@@ -131,9 +132,9 @@ const stages = [
     start: (sendCommands, _data, _onError) => {
       sendCommands(['pwd'])
     },
-    messageHandler: (message, logger, complete) => {
+    messageHandler: (message, logger, onComplete) => {
       logger(message)
-      complete()
+      onComplete()
     }
   },
   {
@@ -146,13 +147,13 @@ const stages = [
         ["nodClone NodLabsXYZ/ec2utils"]
       )
     },
-    messageHandler: (message, logger, complete) => {
+    messageHandler: (message, logger, onComplete) => {
       logger(message)
       if (
         message.startsWith("Resolving deltas: 100%") ||
         message.indexOf("is not an empty directory") > -1
       ) {
-        complete()
+        onComplete()
       }
     },
     subStages: [{
@@ -168,13 +169,14 @@ const stages = [
           [`nodClone ${repoName}`]
         )
       },
-      messageHandler: (message, logger, complete) => {
+      messageHandler: (message, logger, onComplete) => {
         logger(message)
         if (
           message.startsWith("Resolving deltas: 100%") ||
+          message.indexOf("Receiving objects: 100%") > -1 ||
           message.indexOf("is not an empty directory") > -1
         ) {
-          complete()
+          onComplete()
         }
       }
     }, {
@@ -188,12 +190,12 @@ const stages = [
           repoName
         )
       },
-      messageHandler: (message, logger, complete) => {
+      messageHandler: (message, logger, onComplete) => {
         if (message.indexOf('info') > -1) {
           logger(message)
         }
         if (message.indexOf('npm info complete') > -1 || message.indexOf('npm info ok') > -1) {
-          complete()
+          onComplete()
         }
       }
     }, {
@@ -202,22 +204,23 @@ const stages = [
       start: (sendCommands, data, onError) => {
         const repoParts = data.contractRepo.split('/');
         const repoName = repoParts[repoParts.length - 1].replace('.git', '');
-        sendCommands(
-          [
-            'npx hardhat compile --verbose',
-            'cp ../ec2utils/artifacts.js ./scripts/',
-            'node scripts/artifacts.js',
-            'cat compiled.json >> log.txt'
-          ],
-          repoName
-        )
+        sendCommands(["echo 'npm info complete'"])
+        // sendCommands(
+        //   [
+        //     'npx hardhat compile --verbose',
+        //     'cp ../ec2utils/artifacts.js ./scripts/',
+        //     'node scripts/artifacts.js',
+        //     'cat compiled.json >> log.txt'
+        //   ],
+        //   repoName
+        // )
       },
-      messageHandler: (message, logger, complete) => {
+      messageHandler: (message, logger, onComplete) => {
         if (message.indexOf('info') > -1) {
           logger(message)
         }
         if (message.indexOf('npm info complete') > -1 || message.indexOf('npm info ok') > -1) {
-          complete()
+          onComplete()
         }
       }
     }]    
@@ -230,9 +233,29 @@ const stages = [
     start: (sendCommands, data, onError) => {
       sendCommands(['pwd'])
     },
-    messageHandler: (message, logger, complete) => {
-      complete()
-    }
+    messageHandler: (message, logger, onComplete) => {
+      onComplete()
+    },
+    subStages: [{
+      name: 'Wait',
+      blurb: 'Wait for the contract to be fully deployed',
+      start: (sendCommands, data, onError) => {
+        sendCommands(['pwd'])
+      },
+      messageHandler: (message, logger, onComplete) => {
+        onComplete()
+      }
+    },
+    {
+      name: 'Sync',
+      blurb: 'Sync deployed contract with front-end project',
+      start: (sendCommands, data, onError) => {
+        sendCommands(['pwd'])
+      },
+      messageHandler: (message, logger, onComplete) => {
+        onComplete()
+      }
+    }]
   }
 ]
 
