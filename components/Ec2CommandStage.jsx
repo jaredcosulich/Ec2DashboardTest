@@ -2,32 +2,46 @@ import {
   TWButton, TWCircleSpinner
 } from '.'
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const Ec2CommandStage = ({ stage, sendCommands, data }) => {
   const [subStageIndex, setSubStageIndex] = useState(0)
+  const subStageIndexRef = useRef(0)
   const [running, setRunning] = useState(false)
   const [complete, setComplete] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
+  const dataRef = useRef(data)
+
+  const handleComplete = useMemo(() => () => {
+    const subStage = stage.subStages?.[subStageIndexRef.current]
+    if (subStage) {
+      run(subStage)
+    }
+
+    subStageIndexRef.current = subStageIndexRef.current + 1
+    setSubStageIndex(subStageIndexRef.current)
+  }, [stage, run]);
 
   const handleMessage = useMemo(() => (message, logger) => {
-    console.log("Message:", message)
-    if (stage.messageHandler) {
-      stage.messageHandler(
+    let _stage = subStageIndexRef.current === 0 ?
+      stage :
+      stage.subStages?.[subStageIndexRef.current - 1]
+
+    if (!_stage) {
+      _stage = stage.subStages?.[subStageIndexRef.current - 2] || stage
+    }
+
+    if (_stage.messageHandler) {
+      _stage.messageHandler(
         message, 
         logger,
-        () => {
-          setRunning(false)
-          setComplete(true)
-          setSubStageIndex(subStageIndex + 1)
-        }
+        handleComplete
       )
     } else {
       logger(message)
-      setRunning(false)
-      setComplete(true)
+      handleComplete()
     }        
-  }, [stage, subStageIndex])
+  }, [stage, handleComplete])
 
   const sendCommandsProxy = useMemo(() => (commands, directory) => {
     sendCommands(
@@ -49,18 +63,23 @@ const Ec2CommandStage = ({ stage, sendCommands, data }) => {
     setComplete(false)
 
     if (_stage.start) {
-      _stage.start(sendCommandsProxy, data, handleError)
+      _stage.start(sendCommandsProxy, dataRef.current, handleError)
     } else if (_stage.subStages) {
       run(_stage.subStages[subStageIndex])
-      setSubStageIndex(subStageIndex + 1)
+      subStageIndexRef.current = subStageIndexRef.current + 1
+      setSubStageIndex(subStageIndexRef.current)
     }
-  }, [sendCommandsProxy, data, handleError, subStageIndex])
+  }, [sendCommandsProxy, handleError, subStageIndex])
 
   useEffect(() => {
     if (stage.type === 'automatic') {
       run(stage);
     }  
   }, [stage, run])
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data])
 
   const item = (info, running, complete) => {
     return (

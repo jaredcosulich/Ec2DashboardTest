@@ -175,7 +175,7 @@ const Ec2DashboardTest = () => {
                 sendCommands={sendCommands}
               /> :
               <TWCircleSpinner 
-                message={`Connecting to EC2: ${(instances || []).length} instance${(instances || []).length === 1 ? '' : 's'}`} 
+                message={`Connecting to EC2...`} 
               />
             }
             </div>

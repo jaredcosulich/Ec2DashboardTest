@@ -80,6 +80,11 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
       <h2 className='text-lg font-bold mb-3'>
         Repositories
       </h2>
+      <div className='mb-3 text-sm'>
+        Please provide a github repository link for a front-end project and for a contract (hardhat) project. 
+        <br/>
+        This tool will make it easy to compile, deploy, and sync the contract with the front-end project.
+      </div>
       <div className='mb-3'>
         <input 
           type='text'
@@ -136,6 +141,20 @@ const stages = [
     blurb: 'Compile contract from GitHub repository',
     details: '',
     type: 'button',
+    start: (sendCommands, data, onError) => {
+      sendCommands(
+        ["nodClone NodLabsXYZ/ec2utils"]
+      )
+    },
+    messageHandler: (message, logger, complete) => {
+      logger(message)
+      if (
+        message.startsWith("Resolving deltas: 100%") ||
+        message.indexOf("is not an empty directory") > -1
+      ) {
+        complete()
+      }
+    },
     subStages: [{
       name: 'Clone',
       blurb: 'Clone the contract repository',
@@ -163,7 +182,7 @@ const stages = [
       blurb: 'Install contract dependencies',
       start: (sendCommands, data, onError) => {
         const repoParts = data.contractRepo.split('/');
-        const repoName = repoParts[repoParts.length - 1];
+        const repoName = repoParts[repoParts.length - 1].replace('.git', '');
         sendCommands(
           ['npm install --verbose'],
           repoName
@@ -173,7 +192,31 @@ const stages = [
         if (message.indexOf('info') > -1) {
           logger(message)
         }
-        if (message.indexOf('npm info complete') > -1) {
+        if (message.indexOf('npm info complete') > -1 || message.indexOf('npm info ok') > -1) {
+          complete()
+        }
+      }
+    }, {
+      name: 'Compile',
+      blurb: 'Run hardhat compile',
+      start: (sendCommands, data, onError) => {
+        const repoParts = data.contractRepo.split('/');
+        const repoName = repoParts[repoParts.length - 1].replace('.git', '');
+        sendCommands(
+          [
+            'npx hardhat compile --verbose',
+            'cp ../ec2utils/artifacts.js ./scripts/',
+            'node scripts/artifacts.js',
+            'cat compiled.json >> log.txt'
+          ],
+          repoName
+        )
+      },
+      messageHandler: (message, logger, complete) => {
+        if (message.indexOf('info') > -1) {
+          logger(message)
+        }
+        if (message.indexOf('npm info complete') > -1 || message.indexOf('npm info ok') > -1) {
           complete()
         }
       }
