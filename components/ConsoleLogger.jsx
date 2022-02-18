@@ -12,7 +12,7 @@ const ConsoleLogger = ({ text="" }) => {
   }, [text])
 
   return (
-    <div className='w-96 h-96 bg-black text-white p-3 overflow-y-scroll'>
+    <div className='w-full h-96 bg-black text-white p-3 overflow-y-scroll'>
       {text.split(/\n/).map(
         (textLine, index) => (
           <div 

@@ -1,4 +1,5 @@
 import {
+  TWButton,
   TWButtonWithSpinner
 } from '.'
 
@@ -8,35 +9,74 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
   const [frontEndRepo, setFrontEndRepo] = useState()
   const [contractRepo, setContractRepo] = useState()
 
-  const compileContract = (_event, reset) => {
+  const cloneContract = async (directory) => {
+    new Promise((resolve, reject) => {
+      sendCommands(
+        [`nodClone ${contractRepoName}`], 
+        null, 
+        async (logger, message) => {
+          if (!logger) return;
+          logger(message)
+          if (
+            message.startsWith("Resolving deltas: 100%") ||
+            message.indexOf("is not an empty directory") > -1
+          ) {
+            await installAndCompileContract(directory)
+            resolve()
+          }
+        }
+      )
+    })
+  }
+
+  const installAndCompileContract = async (directory) => {
+    new Promise((resolve, reject) => {
+      sendCommands(
+        ['npm install --verbose', 'npx hardhat compile'], 
+        directory,
+        async (logger, message) => {
+          if (message.indexOf('info') > -1) {
+            logger(message)
+          }
+          if (message.indexOf('npm info complete') > -1) {
+            await retrieveContract(directory);
+            resolve()
+          }
+        }
+      )
+    })
+  }
+
+  const retrieveContract = async (directory) => {
+    new Promise((resolve, reject) => {
+      sendCommands(
+        [
+          `cp ec2utils/artifacts.js ${directory}/scripts/`, 
+          `node ${directory}/scripts/artifacts.js`,
+          `cat ${directory}/compiled.json >> log.txt`,
+        ],
+        null,
+        (logger, message) => {
+          logger(message)
+
+          resolve();
+        }
+      )
+    })
+  }
+
+  const compileContract = async (_event, reset) => {
     const contractRepoName = contractRepo.replace('https://github.com/', '')
     const directory = contractRepoName.split('/')[1]
-    sendCommands(
-      [`nodClone ${contractRepoName}`], 
-      null, 
-      (logger, message) => {
-        if (!logger) return;
-        logger(message)
-        if (
-          message.startsWith("Resolving deltas: 100%") ||
-          message.indexOf("is not an empty directory") > -1
-        ) {
-          sendCommands(
-            ['npm install --verbose', 'npx hardhat compile'], 
-            directory,
-            (logger2, message2) => {
-              if (message2.indexOf('info') > -1) {
-                logger2(message2)
-              }
-            }
-          )
-        }
-      }
-    )
-
+    await cloneContract(directory)
     reset()
   }
 
+  // useEffect(() => {
+  //   sendCommands(['nodeClone NodLabsXYZ/ec2utils'])
+  // }, [sendCommands])
+
+  console.log("STAGES", stages)
   return (
     <div>
       <h2 className='text-lg font-bold mb-3'>
@@ -46,7 +86,7 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
         <input 
           type='text'
           placeholder="Front End"
-          className='w-1/2 border rounded p-1 mr-6'
+          className='w-5/6 border rounded p-1 mr-6'
           onChange={(event) => {
             setFrontEndRepo(event.target.value)
           }}
@@ -56,19 +96,82 @@ const FrontEndContractCompileAndSync = ({ sendCommands }) => {
         <input 
           type='text'
           placeholder="Contract"
-          className='w-1/2 border rounded p-1 mr-6'
+          className='w-5/6 border rounded p-1 mr-6'
           onChange={(event) => {
             setContractRepo(event.target.value)            
           }}
         />
       </div>
-      <TWButtonWithSpinner
-        onClick={compileContract}
-      >
-        Compile Contract
-      </TWButtonWithSpinner>
+
+      {stages.map((stage, index) => {
+        return (
+          <div 
+            key={`stage-${index}`} 
+            className='border rounded p-3 mb-3 w-48'
+          >
+            <h3 className='text-lg mb-1'>
+              {stage.name}
+            </h3>
+            <div className='text-sm mb-3'>
+              {stage.blurb}
+            </div>
+            <TWButton
+            >
+              Start
+            </TWButton>
+          </div>
+        )
+      })}
     </div>
   )
 }
+
+const stages = [
+  {
+    name: 'Prep',
+    blurb: 'Prepare the environment',
+    details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
+    commands: [
+      {
+        commands: [
+          'pwd'
+        ]
+      }
+    ],
+    messageHandler: (message, logger, sendCommands, complete) => {
+      complete()
+    }
+  },
+  {
+    name: 'Prep',
+    blurb: 'Prepare the environment',
+    details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
+    commands: [
+      {
+        commands: [
+          'pwd'
+        ]
+      }
+    ],
+    messageHandler: (message, logger, sendCommands, complete) => {
+      complete()
+    }
+  },
+  {
+    name: 'Prep',
+    blurb: 'Prepare the environment',
+    details: 'Start an ec2 instance, ssh into it, and load the communication software that allows us to interact with the instance.',
+    commands: [
+      {
+        commands: [
+          'pwd'
+        ]
+      }
+    ],
+    messageHandler: (message, logger, sendCommands, complete) => {
+      complete()
+    }
+  }
+]
 
 export default FrontEndContractCompileAndSync;
