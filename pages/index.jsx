@@ -26,6 +26,7 @@ const Ec2DashboardTest = () => {
   const [stream, setStream] = useState(null)
   const [streamConnected, setStreamConnected] = useState(false)
   const onMessage = useRef(null)
+  const [showDetails, setShowDetails] = useState(false)
   
   const instanceIds = () => instances.map(
     (instance) => instance.id
@@ -165,87 +166,97 @@ const Ec2DashboardTest = () => {
   return (
     <TWFullScreen>
       <TWCenteredContent>
-        <div className='pb-12'>
+        <div className='p-12 w-screen'>
           <FrontEndContractCompileAndSync 
             sendCommands={sendCommands}
           />
+          <div className='pt-12'>
+            <span
+              className="py-1 px-3 border rounded text-slate-300 border-slate-600 cursor-pointer"
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              {showDetails ? 'Hide' : 'Show'} Details
+            </span>
+          </div>
         </div>
-        <div className='flex'>
-          {instances && 
-            <div className='p-6 w-7/12'>
-              <h2 className='text-lg font-bold'>Instance</h2>
-              <div className='text-sm'>
-                <ReactMarkdownTest>
-                  ```js
-                  ${JSON.stringify(instances, null, 2)}
-                  ```
-                </ReactMarkdownTest>
-                {stream &&
-                  <a 
-                    href={stream}
-                    className={`pt-6 ${streamConnected ? 'text-green-600' : 'text-red-600'} underline`}
-                    target='_blank'
-                    rel='noopener noreferrer'
+        {showDetails && 
+          <div className='flex'>
+            {instances && 
+              <div className='p-6 w-7/12'>
+                <h2 className='text-lg font-bold'>Instance</h2>
+                <div className='text-sm'>
+                  <ReactMarkdownTest>
+                    ```js
+                    ${JSON.stringify(instances, null, 2)}
+                    ```
+                  </ReactMarkdownTest>
+                  {stream &&
+                    <a 
+                      href={stream}
+                      className={`pt-6 ${streamConnected ? 'text-green-600' : 'text-red-600'} underline`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      Stream
+                    </a>
+                  }
+                </div>
+                <div className='pt-12'>
+                  <TWButtonWithSpinner
+                    classMap={{mr: 'mr-6'}}
+                    onClick={startInstance}
                   >
-                    Stream
-                  </a>
-                }
+                    Start
+                  </TWButtonWithSpinner>
+                  <TWButtonWithSpinner
+                    classMap={{mr: 'mr-6'}}
+                    onClick={checkInstances}
+                  >
+                    Check
+                  </TWButtonWithSpinner>
+                  <TWButtonWithSpinner
+                    classMap={{mr: 'mr-6'}}
+                    onClick={loadInstance}
+                  >
+                    Load
+                  </TWButtonWithSpinner>
+                  <TWButtonWithSpinner
+                    classMap={{mr: 'mr-6'}}
+                    onClick={terminateAll}
+                  >
+                    Terminate
+                  </TWButtonWithSpinner>
+                  <TWButtonWithSpinner
+                    onClick={clearLog}
+                  >
+                    Clear
+                  </TWButtonWithSpinner>
+                </div>
+                <div className='pt-6'>
+                  <input 
+                    type='text'
+                    placeholder="Command"
+                    className='w-1/2 border rounded p-1 mr-6'
+                    onChange={(event) => {
+                      setCommand(event.target.value)
+                    }}
+                  />
+                  <TWButtonWithSpinner
+                    onClick={runCommand}
+                  >
+                    Run
+                  </TWButtonWithSpinner>
+                </div>
               </div>
-              <div className='pt-12'>
-                <TWButtonWithSpinner
-                  classMap={{mr: 'mr-6'}}
-                  onClick={startInstance}
-                >
-                  Start
-                </TWButtonWithSpinner>
-                <TWButtonWithSpinner
-                  classMap={{mr: 'mr-6'}}
-                  onClick={checkInstances}
-                >
-                  Check
-                </TWButtonWithSpinner>
-                <TWButtonWithSpinner
-                  classMap={{mr: 'mr-6'}}
-                  onClick={loadInstance}
-                >
-                  Load
-                </TWButtonWithSpinner>
-                <TWButtonWithSpinner
-                  classMap={{mr: 'mr-6'}}
-                  onClick={terminateAll}
-                >
-                  Terminate
-                </TWButtonWithSpinner>
-                <TWButtonWithSpinner
-                  onClick={clearLog}
-                >
-                  Clear
-                </TWButtonWithSpinner>
+            }
+            {!instances &&
+              <div className='p-24'>
+                <TWCircleSpinner message="Loading EC2" />
               </div>
-              <div className='pt-6'>
-                <input 
-                  type='text'
-                  placeholder="Command"
-                  className='w-1/2 border rounded p-1 mr-6'
-                  onChange={(event) => {
-                    setCommand(event.target.value)
-                  }}
-                />
-                <TWButtonWithSpinner
-                  onClick={runCommand}
-                >
-                  Run
-                </TWButtonWithSpinner>
-              </div>
-            </div>
-          }
-          {!instances &&
-            <div className='p-24'>
-              <TWCircleSpinner message="Loading EC2" />
-            </div>
-          }
-          <ConsoleLogger text={log.join('\n')} />
-        </div>
+            }
+            <ConsoleLogger text={log.join('\n')} />
+          </div>
+        }
       </TWCenteredContent>
     </TWFullScreen>
   )
